@@ -1,0 +1,35 @@
+sizeof_male = size(male_set,2);
+sizeof_female = size(female_set,2);
+male_avr = mean(male_set');
+female_avr = mean(female_set');
+cov_male = cov(male_set');
+cov_female = cov(female_set');
+mark = [];
+for i = 1:1:size(dataset,2)
+    x = dataset(:,i);
+    pmale_jug = 1/(2*pi*det(cov_male)^0.5)*exp(-0.5*(x - male_avr')'*cov_male^(-1)*(x-male_avr')); %正态分布
+    pfm_jug = 1/(2*pi*det(cov_female)^0.5)*exp(-0.5*(x - female_avr')'*cov_female^(-1)*(x-female_avr'));
+    post_pmale_jug = pmale_jug*sizeof_male / (sizeof_female + sizeof_male)/(pmale_jug*sizeof_male / (sizeof_female + sizeof_male)  +pfm_jug*sizeof_female / (sizeof_female + sizeof_male));  %后验 
+    post_pfm_jug = pfm_jug*sizeof_female / (sizeof_female + sizeof_male)/(pmale_jug*sizeof_male / (sizeof_female + sizeof_male)+pfm_jug*sizeof_female / (sizeof_female + sizeof_male));
+    if(post_pmale_jug > post_pfm_jug)%判断
+        jugg = 1;
+    else
+        jugg = 0;
+    end
+    mark = [mark,jugg];
+end
+
+err_num = 0;%错误数量
+for j = 1 : size(dataset,2)
+    flag = mark(j);
+    if(j < 79)
+        if(mark(j) == 1)
+            err_num = err_num + 1;
+        end;
+    else
+        if(mark(j) == 0)
+            err_num = err_num + 1;
+        end;
+    end;
+end;
+p_err = err_num / size(dataset,2)%错误率
